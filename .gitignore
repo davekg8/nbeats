@@ -1,0 +1,33 @@
+# Bytecode & Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+env/
+venv/
+ENV/
+
+# Build, packaging & metadata
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Testing, type checking & linting caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# External assets & papers (keep references in README instead)
+docs/papers/*.pdf
+
+# OS & IDE artifacts
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+

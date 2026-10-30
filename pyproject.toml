@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nbeats"
+version = "0.1.0"
+authors = [
+  { name="David EGBAKOU", email="davidegbakou@gmail.com" },
+]
+description = "A tested PyTorch implementation of N-BEATS for time-series forecasting."
+readme = "README.md"
+requires-python = ">=3.10,<3.15"
+dependencies = ["torch>=2.2", "numpy>=1.24"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.4", "mypy>=1.9"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
