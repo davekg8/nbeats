@@ -4,28 +4,95 @@
 
 ## État actuel
 
-- **Module en cours** : mise en place du nouveau projet (repart de zéro, sans le code généré par IA).
-- **Prochaine étape** :
-  1. Faire passer `pytest` (erreur d'import attendue : package `nbeats` introuvable). Il doit trouver
-     lui-même pourquoi, avec le « src layout » et l'installation éditable comme pistes.
-  2. Faire `git init`, premier commit, commencer `docs/journal.md`. (Venv fait : Python 3.14 + torch.)
-  3. Puis préparer `losses` (sMAPE).
-- **Questions en attente de réponse** :
-  - Test de `block` : quelles propriétés vérifier alors que les poids sont aléatoires ? (indice donné :
-    checklist de revue d'AGENTS.md)
-  - Test de `model` : comment vérifier exactement le résidu et la somme des ŷ malgré l'aléatoire ?
-    (indice donné : récupérer les sorties intermédiaires et refaire le calcul)
-  - Test de `train` : quel comportement de la loss attendre en surapprenant une seule petite série ?
-    Sa réponse actuelle (« les poids se mettent à jour ») est trop faible.
-  - sMAPE : 3 cas de test calculés à la main (cas normal, prédiction parfaite, y = ŷ = 0), plus un
-    4ᵉ sur l'invariance d'échelle.
-  - Masque pour 0/0 : comment le vectoriser sans boucle, et le piège du gradient dans la branche non
-    choisie. Pas encore abordé de son côté.
-  - Quel fichier liste les dépendances d'un projet, pour la reproductibilité ?
+- **Module en cours** : `losses` terminé côté maths (2026-11-06). Il met en place la CI et prépare le
+  push avant de passer à `metrics`.
+- **Bloquants CI au 2026-11-06** (constatés, à lui de trancher) : `ruff format --check` échoue sur
+  5 fichiers ; mypy strict signale `tests/test_losses.py:30` (appel non typé) et `block.py` (non
+  versionné, mis de côté).
+- **Consigne de l'auteur (2026-10-31)** : pas de questions banales (outillage, détails secondaires).
+  Creuser quand la question apporte une meilleure compréhension de la discipline (ML/DL).
+- **Consigne (2026-10-31)** : une seule liste de points ouverts, ci-dessous. Au maximum une question
+  nouvelle par réponse. Refermer ou mettre de côté un point avant d'en ouvrir un autre.
+- **Points ouverts, module `losses`** (état au 2026-11-06, vérifié en exécutant le code) :
+  1. ✅ MASE : historique en argument, normalisation par série, axe du temps. La valeur est correcte.
+  2. ✅ `divide_no_nan` réécrit en torch, typé : gradients finis en 0/0 sur les trois losses.
+  3. ✅ sMAPE : stop-gradient en place (gradient mesuré conforme à la version avec stop-gradient).
+  4. ✅ MAPE : plus d'inf quand y = 0, quel que soit le signe de l'erreur.
+  5. ⚠️ Un seul test de gradient (sMAPE en 0/0). `test_ops` ne vérifie toujours pas le gradient de
+     `divide_no_nan`, qui est pourtant l'endroit où le bug vivait.
+- **Clarifié (2026-10-31)** : il a recopié `ops.py` du code officiel, et il l'assume. Point clos. Les
+  commentaires de `test_losses.py` ont été traduits par l'agent, en « mode solution autorisé ».
+- **Mis de côté (à rouvrir au module concerné, pas avant)** :
+  - `dataset` : `__len__` négatif si la série est trop courte ; padding et masques au passage sur M4.
+  - Tests de `block`, `model` et `train` (propriétés à vérifier avec des poids aléatoires,
+    surapprentissage d'une seule série).
 
 ---
 
 ## Historique
+
+### 2026-11-06 — Correctif du gradient, début de la CI
+
+**Acquis confirmés**
+- Il a compris que backward est dérivé du forward par autograd, et qu'il faut empêcher la valeur
+  interdite d'entrer dans l'opération, pas la remplacer après. Correctif écrit seul après un indice
+  de niveau 2, qui règle d'un coup les points 2 et 4.
+- Stop-gradient ajouté au bon endroit (dans la loss, pas dans l'utilitaire).
+- Il est sorti du code officiel quand celui-ci ne convenait pas à ses données : bon réflexe de RE.
+
+**Fragilités**
+- Toujours peu de tests de gradient (point 5). À rouvrir avant `block`, où ils compteront plus.
+- Il n'a pas encore lancé `ruff format` ni mypy avant de dire « c'est fait ».
+
+**Niveaux d'indice atteints**
+- NaN dans le gradient de `divide_no_nan` : niveau 2.
+
+### 2026-10-31 — Losses : théorie du sMAPE, premier jet, revue
+
+**Acquis confirmés**
+- Lien entre l'échelle de la loss et le learning rate sous SGD (calcul juste : lr × 200), et
+  normalisation par Adam. Il a d'abord sous-estimé la conséquence (« moins efficace » au lieu de
+  divergence).
+- Il a lu la section 5.2 seul : rôle du stop-gradient (le dénominateur au carré disparaît). Il a
+  compris que l'explosion près de 0 est atténuée, pas supprimée, une fois que c'était précisé.
+- Biais de surestimation du sMAPE trouvé à partir de la formule. Il a fait de lui-même le lien avec
+  les coûts asymétriques, et a noté la pinball loss comme hypothèse à tester après la baseline.
+- Bonne démarche de reproduction : il est allé lire le code officiel pour le cas 0/0, et il a
+  documenté ses choix dans son journal.
+- MASE : il a corrigé seul la signature et l'axe, après des questions de niveau 1.
+
+**Fragilités**
+- Il teste les valeurs mais pas les gradients, alors que c'était signalé deux fois. Les bugs de
+  gradient passent donc inaperçus.
+- Il reprend du code de référence sans le réécrire : voir le point « À clarifier » ci-dessus.
+
+**Niveaux d'indice atteints**
+- Gradient NaN derrière un masque : niveau 2 (`torch.where` et la branche non choisie, NaN × 0).
+- Stop-gradient : niveau 2 (section 5.2).
+
+### 2026-10-30 — Packaging, git, premiers commits
+
+**Acquis confirmés**
+- L'intuition sur l'erreur d'import était juste (le chemin de recherche des modules). Il préfère
+  installer le package plutôt que bricoler le chemin, mais sa justification reste à approfondir.
+- Il a trouvé seul le fichier de configuration du projet, après un indice de niveau 2 (installation
+  éditable). La question en attente sur le fichier de dépendances est donc résolue.
+- Différence entre dépendances déclarées et environnement figé (`pip freeze`) : expliquée. Il a
+  séparé les dépendances d'exécution et de développement.
+- Git : `.gitignore` correct, PDF du papier exclu, `block.py` non fonctionnel sorti du commit.
+  Deux commits séparés (outillage, puis `dataset`), avec des messages au format Conventional Commits.
+  Bonne application des retours.
+
+**Fragilités**
+- Ses premières réponses sur le « src layout » et `sys.path` étaient vagues (« une liste de lieux »,
+  « plus structuré »). Il n'a pas reformulé le « pourquoi » lui-même.
+- Sa première version faisait passer les tests via `pythonpath` sans installer le package. Il ne
+  s'en est pas rendu compte avant que l'agent le signale.
+- Le `pyproject.toml` contient une config ruff/mypy assez avancée : vérifier qu'il la comprend.
+- Détail : AGENTS.md, LICENSE et docs sont dans le commit `feat(data)` plutôt que dans `chore`.
+
+**Niveaux d'indice atteints**
+- Import du package : niveau 2.
 
 ### 2026-10-27 — Venv recréé (outillage, à sa demande)
 

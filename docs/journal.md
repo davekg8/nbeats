@@ -30,5 +30,14 @@
     * model
     * train
 
-### Ce qui m'a bloqué / mes erreurs
-### Questions ouvertes
+---
+
+## 31/10/2026 
+
+### idée à tester
+ Si au lieu du smape on utilise plutôt le pinball loss pour pouvoir definir le penalisation de la sous etimation par a la surestimation
+ Par exemple pour de la gestion du stock on p eut preferer avoir du surplus de stock qu'un manque ou inversement selon le besoin
+
+### Arbritage
+cas 0/0 → 0, comme divide_no_nan dans le code officiel
+padding + masques à prévoir au passage sur M4
