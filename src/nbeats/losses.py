@@ -29,6 +29,7 @@ def smape_loss(y_true: torch.Tensor, y_pred: torch.Tensor) -> torch.Tensor:
     # Return the mean SMAPE value
     return 100 * smape.mean()
 
+
 def mape_loss(y_true: torch.Tensor, y_pred: torch.Tensor) -> torch.Tensor:
     """
     Compute the Mean Absolute Percentage Error (MAPE) loss.

@@ -27,7 +27,7 @@ def test_smape_loss() -> None:
     assert torch.isclose(result_zeros, torch.tensor(0.0))
 
     # test backward pass
-    result_zeros.backward()
+    torch.autograd.backward(result_zeros)
     assert y_pred_zeros.grad is not None
     assert not torch.isnan(y_pred_zeros.grad).any(), "sMAPE gradients are NaN"
 
@@ -36,7 +36,6 @@ def test_smape_loss() -> None:
     y_nonzero = torch.tensor([10.0, 20.0, 30.0])
     expected_max = torch.tensor(200.0)
     assert torch.isclose(smape_loss(y_zeros, y_nonzero), expected_max)
-
 
 
 def test_mape_loss() -> None:

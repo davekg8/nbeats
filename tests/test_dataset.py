@@ -75,9 +75,9 @@ def test_timeseries_dataset_shapes_and_dtype() -> None:
 
 
 def test_timeseries_dataset_causality() -> None:
-    """Verify that the dataset respects causality 
+    """Verify that the dataset respects causality
     (i.e., future values are not used to predict past values)."""
-    
+
     series = np.arange(1000)
     dataset = TimeSeriesDataset(series, window_size=10, horizon=5)
     x, y = dataset[0]
