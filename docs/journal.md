@@ -41,3 +41,15 @@
 ### Arbritage
 cas 0/0 → 0, comme divide_no_nan dans le code officiel
 padding + masques à prévoir au passage sur M4
+
+## 12/11/2026
+
+def generate_synthetic_series(
+    t: NDArray[np.floating[Any] | np.integer[Any]],
+    trend_type: str = "linear",
+    trend_params: tuple[float, float] = (1.0, 0.0),
+    frequencies: list[float] | None = None,
+    amplitudes: list[float] | None = None,
+    noise_std: float = 0.1,
+) -> NDArray[np.floating[Any]]:
+Pour le t j'avais fais np.number mais plus bas je fais une somme avec un np.floating et mypy --strict refuse car np.number peut être un complexe
