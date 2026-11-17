@@ -5,20 +5,22 @@ import torch
 from numpy.typing import NDArray
 from torch.utils.data import Dataset
 
+from nbeats.typing_utils import FloatArray, RealArray
+
 
 def generate_synthetic_series(
-    t: NDArray[np.floating[Any] | np.integer[Any]],
+    t: RealArray,
     trend_type: str = "linear",
     trend_params: tuple[float, float] = (1.0, 0.0),
     frequencies: list[float] | None = None,
     amplitudes: list[float] | None = None,
     noise_std: float = 0.1,
-) -> NDArray[np.floating[Any]]:
+) -> FloatArray:
     """
     Generate a synthetic time series with a specified trend and seasonal components.
 
     Parameters:
-    t (NDArray[np.floating[Any] | np.integer[Any]]): Time points.
+    t (RealArray): Time points.
     trend_type (str): Type of trend ('linear', 'quadratic').
     trend_params (tuple): Parameters for the trend function.
     frequencies (list): Frequencies of the seasonal components.
@@ -26,10 +28,10 @@ def generate_synthetic_series(
     noise_std (float): Standard deviation of the noise.
 
     Returns:
-    NDArray[np.floating[Any]]: The generated synthetic time series.
+    FloatArray: The generated synthetic time series.
     """
     # Initialize the series
-    series: NDArray[np.floating[Any]] = np.zeros_like(t, dtype=np.float64)
+    series: FloatArray = np.zeros_like(t, dtype=np.float64)
 
     if frequencies is None:
         frequencies = [1.0]  # Default frequency for seasonal component
