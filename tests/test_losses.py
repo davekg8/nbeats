@@ -23,13 +23,13 @@ def test_smape_loss() -> None:
     y_zeros = torch.tensor([0.0, 0.0, 0.0])
     y_pred_zeros = torch.tensor([0.0, 0.0, 0.0], requires_grad=True)
     result_zeros = smape_loss(y_zeros, y_pred_zeros)
-    assert not torch.isnan(result_zeros), "sMAPE returned NaN on zero values"
+    assert torch.isfinite(result_zeros), "sMAPE returned NaN/inf on zero values"
     assert torch.isclose(result_zeros, torch.tensor(0.0))
 
     # test backward pass
     torch.autograd.backward(result_zeros)
     assert y_pred_zeros.grad is not None
-    assert not torch.isnan(y_pred_zeros.grad).any(), "sMAPE gradients are NaN"
+    assert torch.isfinite(y_pred_zeros.grad).all(), "sMAPE gradients are not finite"
 
     # 4. y_true is zero but y_pred is not -> maximum error
     # 200 * |y - p| / (|y| + |p|) = 200 * |p| / |p| = 200
