@@ -4,11 +4,28 @@
 
 ## État actuel
 
-- **Module en cours** : `losses` terminé côté maths (2026-11-06). Il met en place la CI et prépare le
-  push avant de passer à `metrics`.
-- **Bloquants CI au 2026-11-06** (constatés, à lui de trancher) : `ruff format --check` échoue sur
-  5 fichiers ; mypy strict signale `tests/test_losses.py:30` (appel non typé) et `block.py` (non
-  versionné, mis de côté).
+- **Module en cours** : `losses` terminé, CI verte sur 3.10 → 3.14 (2026-11-12). Prochain : fermer
+  le point 5, puis `metrics`.
+- **Point 5 de `losses` fermé (2026-11-12)** : test unitaire du gradient de `divide_no_nan` sur les
+  deux entrées, vérifié comme capable d'échouer sur l'ancienne version.
+- **`metrics` premier jet (2026-11-12)**, en NumPy, écrit séparément des losses. Constats remontés :
+  lint, format et mypy en échec ; `np.ndarray` nu (même erreur que celle déjà vue en 3.10) ; conventions
+  de division par 0 qui diffèrent d'une métrique à l'autre ; axe du MASE sur une entrée batchée ;
+  le test du MAPE avec y = 0 ne vérifie pas la valeur.
+- **Questions en attente (metrics)** : (a) ce que le dénominateur du MASE doit couvrir selon la
+  section 2 ; (b) pourquoi deux conventions différentes pour la division par 0.
+- **`metrics` deuxième jet (2026-11-12)** : réécriture rapide, au style très différent du premier jet
+  (helper, docstrings, conversions de dtype). Alias de type dans un module dédié : bon choix. ND et
+  NRMSE gardés par préférence personnelle, la normalisation de NRMSE est documentée.
+  Constat : le MASE annonce gérer un batch, mais sur un batch de 2 séries il donne 0.109 alors que
+  la loss donne 0.55 (vérifié). Niveau d'indice : 1. Lui demander de l'expliquer avec ses mots :
+  c'est aussi le test pour savoir s'il maîtrise ce jet.
+- **2026-11-17** : MASE par série corrigé (0.55 vérifié), test à deux séries ajouté. Il croyait
+  d'abord que `np.mean` et `torch.mean` se comportaient différemment : idée fausse corrigée (même
+  règle, seul l'argument d'axe manquait). Il a demandé lui-même quelle version était fausse : niveau 2
+  atteint (localisation + tableau chiffré). Choix fait : une série d'historique constant rend tout le
+  batch `inf`. nox + pre-commit ajoutés par lui, la CI appelle nox (source unique des vérifications).
+  Point restant : la version de ruff est fixée dans pre-commit mais pas dans `pyproject.toml`.
 - **Consigne de l'auteur (2026-10-31)** : pas de questions banales (outillage, détails secondaires).
   Creuser quand la question apporte une meilleure compréhension de la discipline (ML/DL).
 - **Consigne (2026-10-31)** : une seule liste de points ouverts, ci-dessous. Au maximum une question
@@ -30,6 +47,18 @@
 ---
 
 ## Historique
+
+### 2026-11-12 — CI en place et verte
+
+**Acquis confirmés**
+- CI écrite par lui : torch en CPU, matrice 3.10 → 3.14, ruff + format + mypy + pytest.
+- Il a corrigé seul l'erreur mypy révélée par le job 3.10 (stubs numpy plus anciens), après un
+  indice de niveau 2. Il a noté dans son journal pourquoi un type plus large était refusé par
+  mypy : raisonnement de typage juste et écrit avec ses mots.
+
+**Fragilités**
+- Bornes de versions de `pyproject.toml` : expliquées, à revérifier qu'il les a ajustées.
+- Messages de commit moins réguliers (« CI workflow », espace avant les deux-points).
 
 ### 2026-11-06 — Correctif du gradient, début de la CI
 
